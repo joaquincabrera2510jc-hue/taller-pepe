@@ -1,0 +1,50 @@
+{
+  "name": "taller-pepe",
+  "productName": "Taller Pepe",
+  "version": "1.1.0",
+  "description": "Gestión de clientes, vehículos, servicios y presupuestos — Taller Pepe",
+  "author": "Taller Pepe",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.45.4",
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "uy.tallerpepe.gestion",
+    "productName": "Taller Pepe",
+    "copyright": "Taller Pepe",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "src/**/*", "build/icon.ico", "package.json"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.ico",
+      "artifactName": "Taller-Pepe-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Taller Pepe",
+      "uninstallDisplayName": "Taller Pepe",
+      "language": "3082"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "joaquincabrera2510jc-hue",
+      "repo": "taller-pepe",
+      "releaseType": "release"
+    }
+  }
+}
