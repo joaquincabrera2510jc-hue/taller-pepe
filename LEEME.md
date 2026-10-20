@@ -44,6 +44,7 @@ El instalador viejo (`INSTALAR Taller Pepe.bat`) ya no hace falta. La carpeta `%
 Página: **https://joaquincabrera2510jc-hue.github.io/taller-pepe/** (carpeta `portal/`, se publica sola con GitHub Pages).
 
 - El cliente entra desde el celular o la PC con su usuario y ve sus vehículos, km, próximo service, historial de servicios y el detalle de cada presupuesto. No puede cambiar nada.
+- Arriba de todo aparecen **las facturas pendientes de pago de todas sus empresas juntas** (por ejemplo Riatel S.A y Logística Las Piedras), con el total adeudado y los días que pasaron.
 - Los usuarios se crean en la app del taller: **Clientes → (cliente) → Acceso web del cliente → + Crear usuario web**.
 - Un mismo usuario puede ver **varias empresas**: entrá a la otra empresa y tocá **+ Dar acceso a un usuario existente**.
 - Desde ahí también se cambia la contraseña o se quita el acceso.
