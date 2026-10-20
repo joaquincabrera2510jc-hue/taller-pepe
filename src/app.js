@@ -16,7 +16,7 @@ class NDir{constructor(parts,name,full){this.parts=parts;this.name=name;this.ful
  async isSameEntry(o){return !!o&&o.parts&&o.parts.join('/')===this.parts.join('/');}}
 const saved={};
 const MES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-const TIPOS_SERV=['Service completo','Cambio de aceite y filtros','Frenos','Tren delantero','Distribución','Embrague','Suspensión','Electricidad','Aire acondicionado','Diagnóstico','Reparación general','Chapa y pintura','Otro'];
+const TIPOS_SERV=['Service completo','Reparación general'];
 
 /* ---------- utilidades ---------- */
 const $=s=>document.querySelector(s);
@@ -609,8 +609,8 @@ function vServicio(){
  </div>${v?`<div class="hint">Último km registrado: <b>${fnum(prevKm)} km</b>${(()=>{const px=S.servicios.filter(x=>x.vehiculoId===v.id&&x.id!==F.id&&n(x.proximoKm)>0).sort(bySvc)[0];return px?` · Próximo service previsto: <b>${fnum(px.proximoKm)} km</b>`:'';})()}${ls?` · Último servicio: <b>${fdate(ls.fecha)}</b> (${esc(ls.tipo)})`:''}</div>`:''}</div>
  <div class="card"><h3>Datos del servicio</h3><div class="form">
   <label class="f">Fecha *<input type="date" id="s_fecha" value="${esc(F.fecha)}" oninput="App.sf('fecha',this.value)"></label>
-  <label class="f">Tipo de servicio<input id="s_tipo" list="tiposServ" value="${esc(F.tipo)}" oninput="App.sfTipo(this.value)"><datalist id="tiposServ">${TIPOS_SERV.map(t=>`<option>${t}</option>`).join('')}</datalist></label>
-  <label class="f kmf" ${esServiceCompleto(F.tipo)?'':'hidden'}>Km del vehículo *<input id="s_km" inputmode="numeric" value="${esc(F.km??'')}" oninput="App.sfKm(this.value)" placeholder="Ej: 85400"></label>
+  <label class="f">Tipo de servicio<select id="s_tipo" onchange="App.sfTipo(this.value)">${(TIPOS_SERV.includes(F.tipo)||!F.tipo?TIPOS_SERV:[...TIPOS_SERV,F.tipo]).map(t=>`<option ${t===F.tipo?'selected':''}>${esc(t)}</option>`).join('')}</select></label>
+  <label class="f"><span>Km del vehículo<span class="kmreq" ${esServiceCompleto(F.tipo)?'':'hidden'}> *</span></span><input id="s_km" inputmode="numeric" value="${esc(F.km??'')}" oninput="App.sfKm(this.value)" placeholder="Ej: 85400"></label>
   <label class="f kmf" ${esServiceCompleto(F.tipo)?'':'hidden'}>Próximo service a los (km)<input id="s_prox" inputmode="numeric" value="${esc(F.proximoKm??'')}" oninput="App.sf('proximoKm',this.value);App.sf('_prox',true)"></label>
   <label class="f full">Trabajo realizado<textarea id="s_trab" oninput="App.sf('trabajo',this.value)" placeholder="Detalle del trabajo realizado…">${esc(F.trabajo)}</textarea></label>
  </div></div>
@@ -641,16 +641,16 @@ function sfKm(v){F.km=v;if(!F._prox){const k=n(v);F.proximoKm=k?k+n(S.config.int
 async function guardarServicio(){
  if(!F.clienteId)return toast('Elegí el cliente','err');
  if(!F.vehiculoId)return toast('Elegí el vehículo','err');
- const conKm=esServiceCompleto(F.tipo);
- if(conKm&&!(n(F.km)>0)){$('#s_km')?.focus();return toast('Ingresá el kilometraje del vehículo','err');}
+ const conKm=esServiceCompleto(F.tipo),hayKm=n(F.km)>0;
+ if(conKm&&!hayKm){$('#s_km')?.focus();return toast('Ingresá el kilometraje del vehículo','err');}
  const v=veh(F.vehiculoId);
  if(!v)return toast('Ese vehículo ya no existe (se eliminó en otra computadora)','err');
  const prev=Math.max(n(v.kmInicial),...S.servicios.filter(s=>s.vehiculoId===v.id&&s.id!==F.id).map(s=>n(s.km)),0);
- if(conKm&&n(F.km)<prev&&!await confirmBox(`El km ingresado (<b>${fnum(F.km)}</b>) es menor al último registrado para este vehículo (<b>${fnum(prev)}</b>). ¿Guardar igual?`,'Guardar igual'))return;
+ if(hayKm&&n(F.km)<prev&&!await confirmBox(`El km ingresado (<b>${fnum(F.km)}</b>) es menor al último registrado para este vehículo (<b>${fnum(prev)}</b>). ¿Guardar igual?`,'Guardar igual'))return;
  const items=F.items.filter(i=>String(i.desc).trim()||n(i.precio)).map(i=>({tipo:i.tipo,desc:String(i.desc).trim(),cant:n(i.cant)||1,precio:n(i.precio)}));
  if(!items.length&&!await confirmBox('El servicio no tiene repuestos ni mano de obra cargados (total $ 0). ¿Guardar igual?','Guardar igual'))return;
  const orig=F.id?S.servicios.find(x=>x.id===F.id):null;
- const s={id:F.id||uid(),clienteId:F.clienteId,vehiculoId:F.vehiculoId,fecha:F.fecha||today(),km:conKm?n(F.km):null,proximoKm:conKm?(n(F.proximoKm)||null):null,tipo:String(F.tipo||'').trim(),trabajo:String(F.trabajo||'').trim(),items,obs:String(F.obs||'').trim(),estadoPago:F.estadoPago||'Pagado',formaPago:F.formaPago||'',ivaRate:orig?orig.ivaRate:n(S.config.iva),conIva:orig?orig.conIva:!!S.config.preciosConIva,factura:orig?.factura||null,creado:orig?.creado||today()};
+ const s={id:F.id||uid(),clienteId:F.clienteId,vehiculoId:F.vehiculoId,fecha:F.fecha||today(),km:hayKm?n(F.km):null,proximoKm:conKm?(n(F.proximoKm)||null):null,tipo:String(F.tipo||'').trim(),trabajo:String(F.trabajo||'').trim(),items,obs:String(F.obs||'').trim(),estadoPago:F.estadoPago||'Pagado',formaPago:F.formaPago||'',ivaRate:orig?orig.ivaRate:n(S.config.iva),conIva:orig?orig.conIva:!!S.config.preciosConIva,factura:orig?.factura||null,creado:orig?.creado||today()};
  s.tot=calc(s.items,s.ivaRate,s.conIva);
  if(F.emitir&&!s.factura){try{s.factura={numero:await nextNum(),emitida:today()};}catch(e){return;}}
  if(orig)S.servicios[S.servicios.indexOf(orig)]=s;else S.servicios.push(s);
@@ -978,7 +978,7 @@ window.App={go,pickFolder,reconnect,formCliente,borrarCliente,formVehiculo,borra
  filtSrv:(k,v)=>{fSrv[k]=v;$('#srvBox').innerHTML=srvFiltered();},
  estSel:(c,v)=>{est={c,v};render();},
  sf:(k,v)=>{F[k]=v;},sfKm,
- sfTipo:v=>{F.tipo=v;const on=esServiceCompleto(v);document.querySelectorAll('.kmf').forEach(el=>el.hidden=!on);},
+ sfTipo:v=>{F.tipo=v;const on=esServiceCompleto(v);document.querySelectorAll('.kmf,.kmreq').forEach(el=>el.hidden=!on);},
  si:(i,k,v)=>{F.items[i][k]=v;updTotals();},
  sAdd:t=>{F.items.push({tipo:t,desc:t==='Mano de obra'?'Mano de obra':'',cant:1,precio:''});render();},
  sDel:i=>{F.items.splice(i,1);render();},
