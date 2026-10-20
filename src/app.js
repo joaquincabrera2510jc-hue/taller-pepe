@@ -1012,17 +1012,41 @@ $('#loginForm').addEventListener('submit',async e=>{
  }catch(err){loginErr(errNube(err));$('#lPass').value='';$('#lPass').focus();}
  finally{btn.disabled=false;}
 });
-$('#logout').addEventListener('click',async()=>{
+async function cerrarSesion(){
  try{clearTimeout(Nube.timer);await subirCambios();await Nube.sb.auth.signOut();}catch(e){}
+ try{localStorage.removeItem(ACT_KEY);}catch(e){}
  location.reload();
-});
+}
+$('#logout').addEventListener('click',cerrarSesion);
+/* ---------- cierre de sesión por inactividad (5 minutos) ---------- */
+const INACTIVO_MS=5*60*1000,ACT_KEY='tph_ultima_actividad';
+let ultimaAct=Date.now(),actGuardada=0;
+function marcarActividad(){
+ ultimaAct=Date.now();
+ if(ultimaAct-actGuardada>15000){actGuardada=ultimaAct;try{localStorage.setItem(ACT_KEY,String(ultimaAct));}catch(e){}}
+}
+['pointerdown','keydown','wheel','touchstart','input','scroll'].forEach(ev=>addEventListener(ev,marcarActividad,{passive:true,capture:true}));
+function revisarInactividad(){
+ if(!Nube.ses)return;
+ if(Date.now()-ultimaAct>=INACTIVO_MS)cerrarSesion();
+}
+setInterval(revisarInactividad,10000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)revisarInactividad();});
+addEventListener('focus',revisarInactividad);
 $('#cargandoBtn').addEventListener('click',()=>location.reload());
 (async()=>{
  if(!CFG_OK){loginErr('Falta configurar la conexión a la nube (config.js).');return;}
  if(!window.supabase||!window.supabase.createClient){loginErr('Falta un componente de la app. Reinstalala.');return;}
  Nube.sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{...(MODO_SERV?{storage:window.localStorage,storageKey:'tph-servicio'}:{storage:window.sessionStorage}),persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
  vigilarConexion();
- try{const {data}=await Nube.sb.auth.getSession();if(data&&data.session)await ingresar();}catch(e){console.error(e);}
+ try{
+  const {data}=await Nube.sb.auth.getSession();
+  if(data&&data.session){
+   let ult=0;try{ult=+localStorage.getItem(ACT_KEY)||0;}catch(e){}
+   if(ult&&Date.now()-ult>=INACTIVO_MS){await Nube.sb.auth.signOut();try{localStorage.removeItem(ACT_KEY);}catch(e){}}
+   else{marcarActividad();await ingresar();}
+  }
+ }catch(e){console.error(e);}
 })();
 /* ---------- actualizaciones automáticas ---------- */
 if(window.tallerNative&&window.tallerNative.onUpdate){

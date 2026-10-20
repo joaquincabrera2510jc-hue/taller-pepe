@@ -62,6 +62,9 @@ Página: **https://joaquincabrera2510jc-hue.github.io/taller-pepe/** (carpeta `p
 2. Subí el número de `"version"` en `package.json` (por ejemplo de `1.1.0` a `1.1.1`).
 3. GitHub arma y publica el instalador solo. Cada app lo baja al abrirse (y cada 30 minutos) y muestra **Reiniciar y actualizar**.
 
+## Seguridad
+- Después de **5 minutos sin usarla**, la app (programa, web y celular) vuelve sola a la pantalla de ingreso. Lo que estaba guardado queda guardado; un servicio a medio cargar sin guardar se pierde.
+
 ## Sin internet
 - Sin conexión no se puede ingresar.
 - Si se corta internet con la app abierta, la pantalla se bloquea hasta que vuelva la conexión.
