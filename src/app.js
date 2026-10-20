@@ -983,6 +983,7 @@ async function startApp(){
   await writeDataFile();
   view={name:'inicio',id:null};render();renderFolder();
   $('#cargando').hidden=true;
+  if(!NATIVE&&window.innerWidth<820)toast('¿Estás en el celular? Para cargar un servicio rápido usá <a href="../servicio/">la carga rápida</a>.','',10000);
  }catch(e){
   console.error(e);
   $('#cargandoTxt').innerHTML='No se pudieron cargar los datos de la nube:<br><b>'+esc(errNube(e))+'</b>';

@@ -1,4 +1,5 @@
-# Publica la página web de clientes (carpeta portal/) en GitHub Pages:
+# Publica en GitHub Pages el portal de clientes, la carga rápida desde el celular
+# y la app completa del taller en el navegador:
 # https://joaquincabrera2510jc-hue.github.io/taller-pepe/
 name: Publicar portal de clientes
 
@@ -6,7 +7,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["portal/**", ".github/workflows/portal.yml"]
+    paths: ["portal/**", "src/**", "build/armar-web.sh", ".github/workflows/portal.yml"]
 
 permissions:
   contents: read
@@ -26,8 +27,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - run: bash build/armar-web.sh
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: portal
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

@@ -49,6 +49,13 @@ Página: **https://joaquincabrera2510jc-hue.github.io/taller-pepe/** (carpeta `p
 - Desde ahí también se cambia la contraseña o se quita el acceso.
 - Los usuarios del portal no pueden entrar a la app del taller, y los del taller no entran al portal.
 
+## Taller desde la web y el celular
+
+- **App completa en el navegador:** https://joaquincabrera2510jc-hue.github.io/taller-pepe/taller/ — la misma app, con el mismo usuario del taller. Los PDF se descargan (en Chrome/Edge de PC se puede elegir la carpeta de clientes igual que en la app).
+- **Carga rápida desde el celular:** https://joaquincabrera2510jc-hue.github.io/taller-pepe/servicio/ — buscar por matrícula o cliente, cargar el servicio y guardar. También crea clientes y vehículos nuevos. El PDF del presupuesto se arma después desde la app.
+- **En el iPhone como app:** abrir la dirección en Safari → Compartir → **Agregar a inicio**. Queda el ícono de TPH y se abre a pantalla completa. Sirve también para el portal de clientes.
+- Todo lo que se carga desde la web aparece al instante en la app del taller.
+
 ## Publicar una versión nueva
 1. Cambiá los archivos que correspondan.
 2. Subí el número de `"version"` en `package.json` (por ejemplo de `1.1.0` a `1.1.1`).

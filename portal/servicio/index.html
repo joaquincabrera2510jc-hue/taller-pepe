@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Taller Pepe – Cargar servicio</title>
+<link rel="icon" href="../icon.png">
+<link rel="apple-touch-icon" href="../icon.png">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="TPH Taller">
+<meta name="theme-color" content="#141414">
+<style>
+:root{--or:#ff6b00;--or2:#e55f00;--dark:#141414;--bg:#f3f3f1;--line:#e3e3e0;--txt:#1b1b1b;--mut:#6b6b6b;--ok:#1f9d55;--err:#d93025;--warn:#b7791f}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:16px;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+[hidden]{display:none!important}
+a{color:var(--or2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 14px;cursor:pointer;font-weight:600;font-size:15px}
+.btn.pri{background:var(--or);border-color:var(--or);color:#fff}
+.btn.sm{padding:7px 10px;font-size:14px;border-radius:8px}
+.btn.full{width:100%}
+.btn:disabled{opacity:.6}
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(circle at 30% 20%,#2a2a2a,#0d0d0d 70%)}
+.login-box{width:min(380px,100%);background:#fff;border-radius:14px;padding:26px 22px;box-shadow:0 20px 60px rgba(0,0,0,.5);border-top:5px solid var(--or)}
+.login-box img{width:100%;display:block;margin:0 auto 14px}
+.login-box h2{margin:0 0 16px;font-size:16px;text-align:center;color:var(--mut);font-weight:600}
+.f{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--mut);font-weight:600;margin-bottom:12px}
+.f input,.f select,.f textarea{padding:12px;border:1px solid #d6d6d2;border-radius:10px;background:#fff;color:var(--txt);font-weight:400;font-size:16px;width:100%}
+.f textarea{min-height:80px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus{outline:2px solid var(--or);border-color:transparent}
+.err{color:var(--err);font-size:14px;min-height:18px;text-align:center;margin-top:10px}
+header{background:var(--dark);color:#ddd;position:sticky;top:0;z-index:5;padding-top:env(safe-area-inset-top)}
+.hd{max-width:640px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.hd img{height:30px}
+.hd .sp{flex:1}
+.hd a,.hd button{color:#bbb;font-size:13px;background:none;border:1px solid #333;border-radius:8px;padding:6px 9px;text-decoration:none;cursor:pointer}
+main{max-width:640px;margin:0 auto;padding:14px 14px 120px}
+h1{font-size:20px;margin:4px 0 12px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.card h3{margin:0 0 12px;font-size:15px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2 .f{margin-bottom:0}
+.hint{font-size:13px;color:var(--mut);margin:-4px 0 12px;line-height:1.45}
+.mat{display:inline-block;font-family:Consolas,"Courier New",monospace;font-weight:700;letter-spacing:1px;border:2px solid #222;border-radius:5px;padding:0 6px;background:#fff}
+.res{border:1px solid var(--line);border-radius:10px;max-height:260px;overflow:auto;margin:-6px 0 12px}
+.res button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid #efefec;background:#fff;padding:11px 12px;cursor:pointer}
+.res button:last-child{border-bottom:0}
+.res .muted{color:var(--mut);font-size:13px}
+.sel{display:flex;align-items:center;gap:10px;background:#fbf7f2;border:1px solid #f1dcc6;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.sel .sp{flex:1;line-height:1.35}
+.tipos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.tipos button{border:2px solid var(--line);background:#fff;border-radius:10px;padding:12px 6px;font-weight:700;cursor:pointer}
+.tipos button.on{border-color:var(--or);background:#fff4ec;color:var(--or2)}
+.item{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}
+.item .top{display:flex;gap:8px;margin-bottom:8px}
+.item .top select{flex:1}
+.item select,.item input{padding:10px;border:1px solid #d6d6d2;border-radius:8px;font-size:16px;background:#fff;width:100%}
+.item .x{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:8px;color:var(--err);width:44px;cursor:pointer;font-size:18px}
+.item .nums{display:grid;grid-template-columns:80px 1fr auto;gap:8px;align-items:center;margin-top:8px}
+.item .imp{font-weight:700;white-space:nowrap}
+.tot{display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:15px;margin-top:6px}
+.tot b{font-size:18px}
+.check{display:flex;align-items:center;gap:10px;font-size:15px;margin:4px 0 4px}
+.check input{width:22px;height:22px;accent-color:var(--or)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:6}
+.bar .in{max-width:640px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.bar .t{flex:1;font-size:13px;color:var(--mut)}
+.bar .t b{display:block;font-size:18px;color:var(--txt)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#1b1b1b;color:#fff;padding:11px 16px;border-radius:10px;font-size:14px;z-index:20;max-width:92vw;border-left:4px solid var(--or)}
+.toast.err{border-left-color:var(--err)}
+.ok-screen{text-align:center;padding:40px 10px}
+.ok-screen .ic{width:64px;height:64px;border-radius:50%;background:#e3f4ea;color:var(--ok);display:grid;place-items:center;margin:0 auto 12px;font-size:34px}
+.carga{text-align:center;padding:60px 16px;color:var(--mut)}
+.spin{width:30px;height:30px;border-radius:50%;border:4px solid #e6e6e3;border-top-color:var(--or);margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+dialog{border:0;border-radius:14px;padding:18px;width:min(460px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog h3{margin:0 0 14px}
+.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="login">
+ <form class="login-box" id="loginForm" autocomplete="on">
+  <img src="../logo.png" alt="Taller Pepe">
+  <h2>Cargar servicio desde el celular</h2>
+  <label class="f">Usuario<input id="lUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+  <label class="f">Contraseña<input id="lPass" type="password" autocomplete="current-password"></label>
+  <button class="btn pri full" type="submit" id="lBtn">Ingresar</button>
+  <div class="err" id="lErr"></div>
+ </form>
+</div>
+
+<div id="app" hidden>
+ <header><div class="hd"><img src="../logo.png" alt="Taller Pepe"><div class="sp"></div><a href="../taller/">Versión completa</a><button id="out">Salir</button></div></header>
+ <main id="main"><div class="carga"><div class="spin"></div>Cargando…</div></main>
+ <div class="bar" id="bar" hidden><div class="in"><div class="t">Total<b id="bTot">$ 0,00</b></div><button class="btn pri" id="bSave" style="min-width:150px">Guardar servicio</button></div></div>
+</div>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm"><h3 id="dlgT"></h3><div id="dlgB"></div><div class="err" id="dlgE"></div><div class="acts"><button class="btn" value="cancel" formnovalidate>Cancelar</button><button class="btn pri" id="dlgOk" value="ok">Guardar</button></div></form></dialog>
+
+<script src="../supabase.js"></script>
+<script>
+(function(){
+'use strict';
+const CFG={
+ SUPABASE_URL:"https://yzdgzaeybuzxcalvnppp.supabase.co",
+ SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6ZGd6YWV5YnV6eGNhbHZucHBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0ODA3NDUsImV4cCI6MjEwODA1Njc0NX0.hZCJ__tKVZpFeZJG8bmmhjNINp3eOyX-kpqNWsU7BH0",
+ DOMINIO:"tallerpepe.local"
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad2=x=>String(x).padStart(2,'0');
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());};
+const fdate=iso=>{if(!iso)return '';const p=String(iso).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:iso;};
+const n=v=>{const x=parseFloat(String(v??'').replace(/\s/g,'').replace(',','.'));return isFinite(x)?x:0;};
+const fnum=v=>Math.round(n(v)).toLocaleString('es-UY');
+const normMat=m=>String(m||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const ORIGEN='movil-'+uid();
+const FORMAS=['Efectivo','Débito','Crédito','Transferencia','Cuenta corriente','Otro'];
+let CONF={moneda:'$',iva:22,preciosConIva:false,intervalo:10000,serie:''},yo=null,clientes=[],vehiculos=[],servicios=[],F=null,q='',guardando=false;
+const money=v=>(CONF.moneda||'$')+' '+Number(v||0).toLocaleString('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:'tph-taller-movil'}});
+
+function toast(m,cls='',ms=3500){const t=document.createElement('div');t.className='toast '+cls;t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),ms);}
+function msgErr(e){const m=String(e&&(e.message||e)||e);
+ if(/Invalid login credentials/i.test(m))return 'Usuario o contraseña incorrectos';
+ if(/Failed to fetch|NetworkError/i.test(m))return 'Sin conexión. Revisá tu internet.';
+ if(/JWT|refresh/i.test(m))return 'La sesión venció. Volvé a ingresar.';
+ return m;}
+function calc(items,rate,conIva){
+ let rep=0,mo=0;
+ (items||[]).forEach(i=>{const t=n(i.cant)*n(i.precio);if(i.tipo==='Mano de obra')mo+=t;else rep+=t;});
+ const bruto=rep+mo,r=n(rate)/100;let neto,iva,total;
+ if(conIva){total=bruto;neto=bruto/(1+r);iva=total-neto;}else{neto=bruto;iva=neto*r;total=neto+iva;}
+ return {rep,mo,neto,iva,total};
+}
+
+/* ---------- ingreso (usuarios del taller) ---------- */
+$('#loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const u=$('#lUser').value.trim().toLowerCase(),pw=$('#lPass').value;
+ if(!u||!pw){$('#lErr').textContent='Escribí usuario y contraseña';return;}
+ $('#lBtn').disabled=true;$('#lErr').textContent='';
+ try{const {error}=await sb.auth.signInWithPassword({email:u+'@'+CFG.DOMINIO,password:pw});if(error)throw error;await entrar();}
+ catch(x){$('#lErr').textContent=msgErr(x);$('#lPass').value='';}
+ finally{$('#lBtn').disabled=false;}
+});
+$('#out').addEventListener('click',async()=>{try{await sb.auth.signOut();}catch(e){}location.reload();});
+async function entrar(){
+ const {data,error}=await sb.rpc('tph_ingreso');
+ if(error)throw error;
+ if(!data||!data.id){await sb.auth.signOut();throw new Error('Esta página es solo para el personal del taller.');}
+ yo=data;$('#login').hidden=true;$('#app').hidden=false;
+ await cargar();nuevo();
+}
+async function cargar(){
+ const filas=[];
+ for(let i=0;;i+=1000){
+  const {data,error}=await sb.from('tph_registros').select('tabla,id,datos').eq('borrado',false).range(i,i+999);
+  if(error)throw error;filas.push(...data);if(data.length<1000)break;
+ }
+ const de=t=>filas.filter(r=>r.tabla===t&&r.datos).map(r=>Object.assign({},r.datos,{id:r.id}));
+ const cf=filas.find(r=>r.tabla==='config');if(cf&&cf.datos)CONF=Object.assign(CONF,cf.datos);
+ clientes=de('clientes');vehiculos=de('vehiculos');servicios=de('servicios');
+}
+const cli=id=>clientes.find(c=>c.id===id);
+const veh=id=>vehiculos.find(v=>v.id===id);
+const servVeh=id=>servicios.filter(s=>s.vehiculoId===id).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||n(b.km)-n(a.km));
+const lastKm=v=>Math.max(n(v.kmInicial),...servVeh(v.id).map(s=>n(s.km)),0);
+const esService=t=>t==='Service completo';
+
+/* ---------- formulario ---------- */
+function nuevo(){
+ F={clienteId:'',vehiculoId:'',fecha:today(),tipo:'Service completo',km:'',proximoKm:'',_prox:false,trabajo:'',
+    items:[{tipo:'Repuesto',desc:'',cant:1,precio:''},{tipo:'Mano de obra',desc:'Mano de obra',cant:1,precio:''}],
+    estadoPago:'Pagado',formaPago:'Efectivo',emitir:true,obs:''};
+ q='';pintar();window.scrollTo(0,0);
+}
+function buscar(){
+ const t=norm(q).trim(),tm=normMat(q);if(!t)return [];
+ const out=[];
+ vehiculos.forEach(v=>{const c=cli(v.clienteId);if((tm&&normMat(v.matricula).includes(tm))||norm(c?.nombre).includes(t)||norm([v.marca,v.modelo].join(' ')).includes(t))out.push({v,c});});
+ clientes.forEach(c=>{if(norm(c.nombre).includes(t)&&!vehiculos.some(v=>v.clienteId===c.id))out.push({v:null,c});});
+ return out.slice(0,30);
+}
+function pintar(){
+ const c=cli(F.clienteId),v=veh(F.vehiculoId),conKm=esService(F.tipo);
+ const vs=c?vehiculos.filter(x=>x.clienteId===c.id).sort((a,b)=>String(a.matricula).localeCompare(String(b.matricula))):[];
+ const prev=v?lastKm(v):0,ls=v?servVeh(v.id)[0]:null;
+ $('#main').innerHTML=`<h1>Nuevo servicio</h1>
+ <div class="card"><h3>Vehículo</h3>
+  ${c?`<div class="sel"><div class="sp"><b>${esc(c.nombre)}</b>${c.telefono?`<br><span style="font-size:13px;color:var(--mut)">${esc(c.telefono)}</span>`:''}</div><button class="btn sm" data-a="cambiar">Cambiar</button></div>
+   <label class="f">Vehículo *<select id="fVeh"><option value="">— Elegir —</option>${vs.map(x=>`<option value="${esc(x.id)}" ${x.id===F.vehiculoId?'selected':''}>${esc(x.matricula)}${x.marca||x.modelo?' · '+esc([x.marca,x.modelo].filter(Boolean).join(' ')):''}</option>`).join('')}</select></label>
+   ${v?`<div class="hint">Último km: <b>${fnum(prev)}</b>${ls?` · Último servicio: <b>${fdate(ls.fecha)}</b> (${esc(ls.tipo||'')})`:''}</div>`:''}
+   <button class="btn sm" data-a="nuevoVeh">+ Nuevo vehículo</button>`
+  :`<label class="f">Buscar por matrícula o cliente<input id="fBus" value="${esc(q)}" placeholder="Ej: SBA1234 o Pérez" autocomplete="off" autocapitalize="characters"></label>
+   <div id="fRes"></div>
+   <button class="btn sm" data-a="nuevoCli">+ Nuevo cliente</button>`}
+ </div>
+ <div class="card"><h3>Servicio</h3>
+  <div class="tipos">${['Service completo','Reparación general'].map(t=>`<button type="button" data-tipo="${t}" class="${F.tipo===t?'on':''}">${t}</button>`).join('')}</div>
+  <div class="row2">
+   <label class="f">Km del vehículo${conKm?' *':''}<input id="fKm" inputmode="numeric" value="${esc(F.km)}" placeholder="Ej: 85400"></label>
+   ${conKm?`<label class="f">Próximo service (km)<input id="fProx" inputmode="numeric" value="${esc(F.proximoKm)}"></label>`:`<label class="f">Fecha<input id="fFecha" type="date" value="${esc(F.fecha)}"></label>`}
+  </div>
+  ${conKm?`<label class="f" style="margin-top:12px">Fecha<input id="fFecha" type="date" value="${esc(F.fecha)}"></label>`:'<div style="height:12px"></div>'}
+  <label class="f">Trabajo realizado<textarea id="fTrab" placeholder="Detalle del trabajo realizado…">${esc(F.trabajo)}</textarea></label>
+ </div>
+ <div class="card"><h3>Repuestos y mano de obra</h3>
+  <div id="fItems">${F.items.map((i,k)=>`<div class="item" data-i="${k}">
+   <div class="top"><select data-k="tipo"><option ${i.tipo==='Repuesto'?'selected':''}>Repuesto</option><option ${i.tipo==='Mano de obra'?'selected':''}>Mano de obra</option></select><button type="button" class="x" data-a="del" aria-label="Quitar">×</button></div>
+   <input data-k="desc" value="${esc(i.desc)}" placeholder="${i.tipo==='Mano de obra'?'Mano de obra':'Ej: Filtro de aceite'}">
+   <div class="nums"><input data-k="cant" inputmode="decimal" value="${esc(i.cant)}" placeholder="Cant."><input data-k="precio" inputmode="decimal" value="${esc(i.precio)}" placeholder="Precio unit."><span class="imp">${money(n(i.cant)*n(i.precio))}</span></div></div>`).join('')}</div>
+  <div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn sm" data-a="addRep">+ Repuesto</button><button class="btn sm" data-a="addMo">+ Mano de obra</button></div>
+  <div class="tot" id="fTot"></div>
+ </div>
+ <div class="card"><h3>Pago</h3>
+  <div class="row2">
+   <label class="f">Estado<select id="fEst"><option ${F.estadoPago!=='Pendiente'?'selected':''}>Pagado</option><option ${F.estadoPago==='Pendiente'?'selected':''}>Pendiente</option></select></label>
+   <label class="f">Forma de pago<select id="fForma">${FORMAS.map(x=>`<option ${x===F.formaPago?'selected':''}>${x}</option>`).join('')}</select></label>
+  </div>
+  <label class="check" style="margin-top:12px"><input type="checkbox" id="fEmit" ${F.emitir?'checked':''}> Darle número de presupuesto</label>
+  <div class="hint" style="margin:4px 0 12px">El PDF se arma desde la app del taller (Servicios → Presupuesto PDF).</div>
+  <label class="f">Observaciones<textarea id="fObs">${esc(F.obs)}</textarea></label>
+ </div>`;
+ $('#bar').hidden=false;
+ pintarRes();totales();
+ if(!c){const b=$('#fBus');if(b&&q){b.focus();b.setSelectionRange(q.length,q.length);}}
+}
+function pintarRes(){
+ const r=$('#fRes');if(!r)return;
+ const l=buscar();
+ r.innerHTML=q.trim()?(l.length?`<div class="res">${l.map(({v,c})=>`<button type="button" data-pick="${esc(c?.id||'')}|${esc(v?.id||'')}">${v?`<span class="mat">${esc(v.matricula)}</span> `:''}<b>${esc(c?.nombre||'—')}</b>${v&&(v.marca||v.modelo)?`<div class="muted">${esc([v.marca,v.modelo,v.anio].filter(Boolean).join(' '))}</div>`:''}${!v?'<div class="muted">Sin vehículos</div>':''}</button>`).join('')}</div>`:'<div class="hint">No se encontró. Podés crear el cliente nuevo.</div>'):'';
+}
+function totales(){
+ const t=calc(F.items,n(CONF.iva),!!CONF.preciosConIva);
+ const el=$('#fTot');if(el)el.innerHTML=`<span>Subtotal</span><span>${money(t.neto)}</span><span>IVA ${esc(n(CONF.iva))}%${CONF.preciosConIva?' (incluido)':''}</span><span>${money(t.iva)}</span><b>TOTAL</b><b>${money(t.total)}</b>`;
+ $('#bTot').textContent=money(t.total);
+ document.querySelectorAll('.item').forEach(d=>{const i=F.items[d.dataset.i];if(i)d.querySelector('.imp').textContent=money(n(i.cant)*n(i.precio));});
+}
+const main=$('#main');
+main.addEventListener('input',e=>{
+ const t=e.target;
+ if(t.id==='fBus'){q=t.value;pintarRes();return;}
+ if(t.id==='fKm'){F.km=t.value;if(!F._prox&&esService(F.tipo)){const k=n(t.value);F.proximoKm=k?k+n(CONF.intervalo||10000):'';const p=$('#fProx');if(p)p.value=F.proximoKm;}return;}
+ if(t.id==='fProx'){F.proximoKm=t.value;F._prox=true;return;}
+ if(t.id==='fTrab'){F.trabajo=t.value;return;}
+ if(t.id==='fObs'){F.obs=t.value;return;}
+ if(t.id==='fFecha'){F.fecha=t.value;return;}
+ const it=t.closest('.item');if(it&&t.dataset.k){F.items[it.dataset.i][t.dataset.k]=t.value;totales();}
+});
+main.addEventListener('change',e=>{
+ const t=e.target;
+ if(t.id==='fVeh'){F.vehiculoId=t.value;pintar();return;}
+ if(t.id==='fEst'){F.estadoPago=t.value;return;}
+ if(t.id==='fForma'){F.formaPago=t.value;return;}
+ if(t.id==='fEmit'){F.emitir=t.checked;return;}
+ const it=t.closest('.item');if(it&&t.dataset.k==='tipo'){F.items[it.dataset.i].tipo=t.value;totales();}
+});
+main.addEventListener('click',e=>{
+ const pk=e.target.closest('[data-pick]');
+ if(pk){const [c,v]=pk.dataset.pick.split('|');F.clienteId=c;const vs=vehiculos.filter(x=>x.clienteId===c);F.vehiculoId=v||(vs.length===1?vs[0].id:'');q='';pintar();return;}
+ const tp=e.target.closest('[data-tipo]');if(tp){F.tipo=tp.dataset.tipo;if(esService(F.tipo)&&!F._prox&&n(F.km))F.proximoKm=n(F.km)+n(CONF.intervalo||10000);pintar();return;}
+ const a=e.target.closest('[data-a]');if(!a)return;
+ const k=a.dataset.a;
+ if(k==='cambiar'){F.clienteId='';F.vehiculoId='';pintar();setTimeout(()=>$('#fBus')?.focus(),0);}
+ else if(k==='addRep'){F.items.push({tipo:'Repuesto',desc:'',cant:1,precio:''});pintar();}
+ else if(k==='addMo'){F.items.push({tipo:'Mano de obra',desc:'Mano de obra',cant:1,precio:''});pintar();}
+ else if(k==='del'){F.items.splice(+a.closest('.item').dataset.i,1);pintar();}
+ else if(k==='nuevoCli')nuevoCliente();
+ else if(k==='nuevoVeh')nuevoVehiculo();
+});
+
+/* ---------- guardar en la nube ---------- */
+async function subir(tabla,o){
+ const {error}=await sb.from('tph_registros').upsert({tabla,id:o.id,datos:o,borrado:false,origen:ORIGEN},{onConflict:'tabla,id',returning:'minimal'});
+ if(error)throw error;
+}
+function dialogo(titulo,html,onOk){
+ const d=$('#dlg');$('#dlgT').textContent=titulo;$('#dlgB').innerHTML=html;$('#dlgE').textContent='';
+ const ok=$('#dlgOk');
+ ok.onclick=async ev=>{ev.preventDefault();ok.disabled=true;try{const r=await onOk();if(r!==false)d.close();}catch(x){$('#dlgE').textContent=msgErr(x);}finally{ok.disabled=false;}};
+ d.showModal();setTimeout(()=>d.querySelector('input')?.focus(),50);
+}
+const dv=id=>(document.getElementById(id)?.value||'').trim();
+function nuevoCliente(){
+ dialogo('Nuevo cliente',`<label class="f">Nombre y apellido / Razón social *<input id="cNom" value="${esc(q)}"></label><label class="f">Teléfono<input id="cTel" inputmode="tel"></label><label class="f">CI / RUT<input id="cDoc"></label>`,async()=>{
+  const nombre=dv('cNom');if(!nombre){$('#dlgE').textContent='El nombre es obligatorio';return false;}
+  const o={id:uid(),creado:today(),nombre,documento:dv('cDoc'),telefono:dv('cTel'),email:'',ciudad:'',direccion:'',notas:''};
+  await subir('clientes',o);clientes.push(o);F.clienteId=o.id;F.vehiculoId='';q='';pintar();toast('Cliente creado');
+  setTimeout(nuevoVehiculo,150);
+ });
+}
+function nuevoVehiculo(){
+ if(!F.clienteId)return;
+ dialogo('Nuevo vehículo de '+(cli(F.clienteId)?.nombre||''),`<label class="f">Matrícula *<input id="vMat" style="text-transform:uppercase" placeholder="SBA 1234" value="${esc(normMat(q)?q.toUpperCase():'')}"></label><div class="row2"><label class="f">Marca<input id="vMar"></label><label class="f">Modelo<input id="vMod"></label></div><div class="row2" style="margin-top:12px"><label class="f">Año<input id="vAn" inputmode="numeric"></label><label class="f">Km al ingresar<input id="vKm" inputmode="numeric"></label></div>`,async()=>{
+  const mat=dv('vMat').toUpperCase().replace(/\s+/g,' ');
+  if(!normMat(mat)){$('#dlgE').textContent='La matrícula es obligatoria';return false;}
+  if(vehiculos.some(x=>normMat(x.matricula)===normMat(mat))){$('#dlgE').textContent='Ya existe un vehículo con esa matrícula';return false;}
+  const o={id:uid(),creado:today(),clienteId:F.clienteId,matricula:mat,marca:dv('vMar'),modelo:dv('vMod'),anio:dv('vAn'),color:'',combustible:'',chasis:'',kmInicial:n(dv('vKm'))||0,notas:''};
+  await subir('vehiculos',o);vehiculos.push(o);F.vehiculoId=o.id;pintar();toast('Vehículo creado');
+ });
+}
+$('#bSave').addEventListener('click',guardar);
+async function guardar(){
+ if(guardando)return;
+ if(!F.clienteId)return toast('Elegí el cliente','err');
+ if(!F.vehiculoId)return toast('Elegí el vehículo','err');
+ const conKm=esService(F.tipo),hayKm=n(F.km)>0;
+ if(conKm&&!hayKm){$('#fKm')?.focus();return toast('Ingresá el kilometraje del vehículo','err');}
+ const v=veh(F.vehiculoId),prev=lastKm(v);
+ if(hayKm&&n(F.km)<prev&&!confirm(`El km ingresado (${fnum(F.km)}) es menor al último registrado (${fnum(prev)}). ¿Guardar igual?`))return;
+ const items=F.items.filter(i=>String(i.desc).trim()||n(i.precio)).map(i=>({tipo:i.tipo,desc:String(i.desc).trim(),cant:n(i.cant)||1,precio:n(i.precio)}));
+ if(!items.length&&!confirm('El servicio no tiene repuestos ni mano de obra cargados (total $ 0). ¿Guardar igual?'))return;
+ guardando=true;const b=$('#bSave');b.disabled=true;b.textContent='Guardando…';
+ try{
+  const s={id:uid(),clienteId:F.clienteId,vehiculoId:F.vehiculoId,fecha:F.fecha||today(),km:hayKm?n(F.km):null,proximoKm:conKm?(n(F.proximoKm)||null):null,
+   tipo:F.tipo,trabajo:F.trabajo.trim(),items,obs:F.obs.trim(),estadoPago:F.estadoPago,formaPago:F.formaPago,ivaRate:n(CONF.iva),conIva:!!CONF.preciosConIva,factura:null,creado:today()};
+  s.tot=calc(s.items,s.ivaRate,s.conIva);
+  if(F.emitir){
+   const {data,error}=await sb.rpc('tph_siguiente_numero');if(error)throw error;
+   s.factura={numero:(CONF.serie?CONF.serie+'-':'')+String(data).padStart(6,'0'),emitida:today()};
+  }
+  await subir('servicios',s);servicios.push(s);
+  $('#bar').hidden=true;
+  $('#main').innerHTML=`<div class="ok-screen"><div class="ic">✓</div><h1>Servicio guardado</h1>
+   <p><span class="mat">${esc(v.matricula)}</span> · ${esc(cli(s.clienteId)?.nombre||'')}<br>${esc(s.tipo)}${s.km?' · '+fnum(s.km)+' km':''}<br><b>${money(s.tot.total)}</b>${s.factura?'<br>Presupuesto <b>'+esc(s.factura.numero)+'</b>':''}</p>
+   <p style="color:var(--mut);font-size:14px">Ya aparece en la app del taller.</p>
+   <button class="btn pri full" id="otro">Cargar otro servicio</button></div>`;
+  $('#otro').onclick=nuevo;window.scrollTo(0,0);
+ }catch(x){toast('No se pudo guardar: '+msgErr(x),'err',6000);}
+ finally{guardando=false;b.disabled=false;b.textContent='Guardar servicio';}
+}
+(async()=>{
+ try{const {data}=await sb.auth.getSession();if(data&&data.session)await entrar();}
+ catch(e){$('#lErr').textContent=msgErr(e);}
+})();
+})();
+</script>
+</body>
+</html>
