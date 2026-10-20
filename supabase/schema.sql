@@ -156,3 +156,138 @@ begin
     end loop;
   end if;
 end $$;
+
+-- =====================================================================
+--  Portal web de clientes (solo lectura)
+--  Un usuario del portal puede ver una o varias empresas/clientes.
+--  Los usuarios se crean desde la app del taller (ficha del cliente → Acceso web).
+-- =====================================================================
+create table if not exists public.tph_portal_usuarios (
+  id             uuid primary key references auth.users(id) on delete cascade,
+  usuario        text not null unique check (usuario ~ '^[a-z0-9._-]{3,30}$'),
+  nombre         text not null check (length(trim(nombre)) > 0),
+  activo         boolean not null default true,
+  creado         timestamptz not null default now(),
+  ultimo_ingreso timestamptz
+);
+create table if not exists public.tph_portal_accesos (
+  usuario_id uuid not null references public.tph_portal_usuarios(id) on delete cascade,
+  cliente_id text not null,
+  creado     timestamptz not null default now(),
+  primary key (usuario_id, cliente_id)
+);
+
+-- Clientes que puede ver el usuario del portal conectado
+create or replace function public.tph_portal_clientes() returns setof text
+language sql stable security definer set search_path = public as $$
+  select a.cliente_id from public.tph_portal_accesos a
+    join public.tph_portal_usuarios u on u.id = a.usuario_id
+   where u.id = auth.uid() and u.activo
+$$;
+
+-- Al ingresar al portal: datos del usuario y sus clientes (null si no tiene acceso)
+create or replace function public.tph_portal_ingreso() returns json
+language plpgsql security definer set search_path = public as $$
+declare r public.tph_portal_usuarios;
+begin
+  update public.tph_portal_usuarios set ultimo_ingreso = now()
+   where id = auth.uid() and activo returning * into r;
+  if r.id is null then return null; end if;
+  return json_build_object('usuario', r.usuario, 'nombre', r.nombre,
+    'clientes', coalesce((select json_agg(cliente_id) from public.tph_portal_accesos where usuario_id = r.id), '[]'::json));
+end $$;
+
+-- ---- gestión desde la app del taller (solo usuarios del taller) ----
+create or replace function public.tph_portal_lista()
+returns table (usuario text, nombre text, activo boolean, ultimo_ingreso timestamptz, clientes text[])
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.tph_permitido() then raise exception 'No tenés permiso.'; end if;
+  return query
+    select u.usuario, u.nombre, u.activo, u.ultimo_ingreso,
+           coalesce(array_agg(a.cliente_id order by a.cliente_id) filter (where a.cliente_id is not null), '{}')
+      from public.tph_portal_usuarios u left join public.tph_portal_accesos a on a.usuario_id = u.id
+     group by u.id order by u.usuario;
+end $$;
+
+create or replace function public.tph_portal_crear(p_usuario text, p_nombre text, p_password text, p_cliente text)
+returns text
+language plpgsql security definer set search_path = public, auth, extensions as $$
+declare v_usr text := lower(trim(p_usuario)); v_email text; v_id uuid := gen_random_uuid();
+begin
+  if not public.tph_permitido() then raise exception 'No tenés permiso.'; end if;
+  if v_usr !~ '^[a-z0-9._-]{3,30}$' then raise exception 'El usuario lleva de 3 a 30 letras minúsculas, números, punto o guion.'; end if;
+  if coalesce(trim(p_nombre), '') = '' then raise exception 'Escribí el nombre.'; end if;
+  if length(coalesce(p_password, '')) < 6 then raise exception 'La contraseña tiene que tener al menos 6 caracteres.'; end if;
+  v_email := v_usr || '@tallerpepe.local';
+  if exists (select 1 from auth.users where lower(email) = v_email) then raise exception 'Ese usuario ya existe. Elegí otro nombre.'; end if;
+  insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                          raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+                          confirmation_token, recovery_token, email_change, email_change_token_new,
+                          email_change_token_current, phone_change, phone_change_token, reauthentication_token)
+  values ('00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated', v_email,
+          crypt(p_password, gen_salt('bf')), now(),
+          '{"provider":"email","providers":["email"]}', jsonb_build_object('usuario', v_usr, 'nombre', trim(p_nombre), 'portal', true),
+          now(), now(), '', '', '', '', '', '', '', '');
+  insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
+  values (gen_random_uuid(), v_id, v_id::text, 'email',
+          jsonb_build_object('sub', v_id::text, 'email', v_email, 'email_verified', true), now(), now(), now());
+  insert into public.tph_portal_usuarios (id, usuario, nombre) values (v_id, v_usr, trim(p_nombre));
+  if coalesce(p_cliente, '') <> '' then
+    insert into public.tph_portal_accesos (usuario_id, cliente_id) values (v_id, p_cliente);
+  end if;
+  return v_usr;
+end $$;
+
+create or replace function public.tph_portal_vincular(p_usuario text, p_cliente text, p_dar boolean)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare v_id uuid;
+begin
+  if not public.tph_permitido() then raise exception 'No tenés permiso.'; end if;
+  select id into v_id from public.tph_portal_usuarios where usuario = lower(trim(p_usuario));
+  if v_id is null then raise exception 'Ese usuario web no existe.'; end if;
+  if p_dar then
+    insert into public.tph_portal_accesos (usuario_id, cliente_id) values (v_id, p_cliente) on conflict do nothing;
+  else
+    delete from public.tph_portal_accesos where usuario_id = v_id and cliente_id = p_cliente;
+  end if;
+end $$;
+
+create or replace function public.tph_portal_editar(p_usuario text, p_nombre text, p_password text, p_activo boolean)
+returns void
+language plpgsql security definer set search_path = public, auth, extensions as $$
+declare v_id uuid;
+begin
+  if not public.tph_permitido() then raise exception 'No tenés permiso.'; end if;
+  select id into v_id from public.tph_portal_usuarios where usuario = lower(trim(p_usuario));
+  if v_id is null then raise exception 'Ese usuario web no existe.'; end if;
+  if coalesce(p_password, '') <> '' then
+    if length(p_password) < 6 then raise exception 'La contraseña tiene que tener al menos 6 caracteres.'; end if;
+    update auth.users set encrypted_password = crypt(p_password, gen_salt('bf')), updated_at = now() where id = v_id;
+  end if;
+  update public.tph_portal_usuarios
+     set nombre = coalesce(nullif(trim(p_nombre), ''), nombre), activo = coalesce(p_activo, activo)
+   where id = v_id;
+end $$;
+
+alter table public.tph_portal_usuarios enable row level security;
+alter table public.tph_portal_accesos  enable row level security;
+revoke all on public.tph_portal_usuarios, public.tph_portal_accesos from anon, authenticated;
+
+revoke all on function public.tph_portal_clientes(), public.tph_portal_ingreso(), public.tph_portal_lista(),
+                       public.tph_portal_crear(text, text, text, text), public.tph_portal_vincular(text, text, boolean),
+                       public.tph_portal_editar(text, text, text, boolean) from public, anon;
+grant execute on function public.tph_portal_clientes(), public.tph_portal_ingreso(), public.tph_portal_lista(),
+                          public.tph_portal_crear(text, text, text, text), public.tph_portal_vincular(text, text, boolean),
+                          public.tph_portal_editar(text, text, text, boolean) to authenticated;
+
+-- El cliente solo ve lo suyo, y nunca lo borrado
+drop policy if exists portal_leer on public.tph_registros;
+create policy portal_leer on public.tph_registros for select to authenticated using (
+  not borrado and (
+    (tabla = 'clientes' and id in (select public.tph_portal_clientes()))
+    or (tabla in ('vehiculos', 'servicios') and datos->>'clienteId' in (select public.tph_portal_clientes()))
+    or (tabla = 'config' and exists (select public.tph_portal_clientes()))
+  )
+);

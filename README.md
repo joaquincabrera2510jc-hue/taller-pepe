@@ -39,6 +39,16 @@ Funciona igual que la de López Motors.
 
 El instalador viejo (`INSTALAR Taller Pepe.bat`) ya no hace falta. La carpeta `%LOCALAPPDATA%\TallerPepe` de la versión vieja se puede borrar.
 
+## Portal web de clientes (solo lectura)
+
+Página: **https://joaquincabrera2510jc-hue.github.io/taller-pepe/** (carpeta `portal/`, se publica sola con GitHub Pages).
+
+- El cliente entra desde el celular o la PC con su usuario y ve sus vehículos, km, próximo service, historial de servicios y el detalle de cada presupuesto. No puede cambiar nada.
+- Los usuarios se crean en la app del taller: **Clientes → (cliente) → Acceso web del cliente → + Crear usuario web**.
+- Un mismo usuario puede ver **varias empresas**: entrá a la otra empresa y tocá **+ Dar acceso a un usuario existente**.
+- Desde ahí también se cambia la contraseña o se quita el acceso.
+- Los usuarios del portal no pueden entrar a la app del taller, y los del taller no entran al portal.
+
 ## Publicar una versión nueva
 1. Cambiá los archivos que correspondan.
 2. Subí el número de `"version"` en `package.json` (por ejemplo de `1.1.0` a `1.1.1`).

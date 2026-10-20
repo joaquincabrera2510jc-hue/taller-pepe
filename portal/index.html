@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Taller Pepe – Mis vehículos</title>
+<link rel="icon" href="icon.png">
+<meta name="robots" content="noindex">
+<style>
+:root{--or:#ff6b00;--or2:#e55f00;--dark:#141414;--dark2:#1f1f1f;--bg:#f3f3f1;--card:#fff;--line:#e3e3e0;--txt:#1b1b1b;--mut:#6b6b6b;--ok:#1f9d55;--err:#d93025;--warn:#b7791f}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--txt);font-size:15px;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+[hidden]{display:none!important}
+a{color:var(--or2)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--or)}
+.btn.pri{background:var(--or);border-color:var(--or);color:#fff}
+.btn.pri:hover{background:var(--or2)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.6;cursor:default}
+/* ingreso */
+#login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(circle at 30% 20%,#2a2a2a,#0d0d0d 70%)}
+.login-box{width:min(380px,100%);background:#fff;border-radius:14px;padding:28px 24px;box-shadow:0 20px 60px rgba(0,0,0,.5);border-top:5px solid var(--or)}
+.login-box img{width:100%;display:block;margin:0 auto 16px}
+.login-box h2{margin:0 0 18px;font-size:16px;text-align:center;color:var(--mut);font-weight:600}
+.f{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:12px}
+.f input,.f select{padding:11px 12px;border:1px solid #d6d6d2;border-radius:8px;background:#fff;color:var(--txt);font-weight:400;font-size:16px}
+.f input:focus,.f select:focus{outline:2px solid var(--or);border-color:transparent}
+.login-box .btn{width:100%;padding:12px;margin-top:4px}
+.err{color:var(--err);font-size:13px;min-height:18px;text-align:center;margin-top:10px}
+/* app */
+header{background:var(--dark);color:#ddd;position:sticky;top:0;z-index:5}
+.hd{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+.hd img{height:34px;display:block}
+.hd .sp{flex:1}
+.hd .who{font-size:13px;color:#bbb;text-align:right;line-height:1.3}
+.hd .out{background:none;border:1px solid #333;color:#bbb;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:13px}
+.hd .out:hover{border-color:var(--or);color:#fff}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 40px}
+h1{margin:0 0 4px;font-size:22px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:16px}
+.emps{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 16px}
+.emp{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 14px;cursor:pointer;font-weight:600;font-size:14px}
+.emp.on{background:var(--or);border-color:var(--or);color:#fff}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 .sp{flex:1}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-left:4px solid var(--or);border-radius:10px;padding:12px 14px}
+.kpi .l{font-size:12px;color:var(--mut)}
+.kpi .v{font-size:20px;font-weight:700;margin-top:3px}
+.kpi .v.sm{font-size:16px}
+.vcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.vcard{border:1px solid var(--line);border-radius:10px;padding:12px;line-height:1.55;font-size:14px}
+.vcard .h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.mat{display:inline-block;font-family:Consolas,"Courier New",monospace;font-weight:700;letter-spacing:1px;border:2px solid #222;border-radius:5px;padding:1px 7px;background:#fff;white-space:nowrap}
+.muted{color:var(--mut)}
+.alerta{color:var(--warn);font-weight:600}
+.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:20px;font-weight:600}
+.tag.ok{background:#e3f4ea;color:var(--ok)}
+.tag.pend{background:#fdf0dc;color:var(--warn)}
+.filt{min-width:170px;padding:7px 9px;border:1px solid #d6d6d2;border-radius:8px;background:#fff;font-size:14px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--mut);font-weight:600;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid #efefec;vertical-align:top}
+tr.click{cursor:pointer}
+tr.click:hover td{background:#fbf7f2}
+.r{text-align:right}
+.empty{color:var(--mut);text-align:center;padding:20px}
+.det td{background:#faf9f7;padding:12px 14px}
+.det table{background:#fff;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+.det td.r{white-space:nowrap}
+.tot{display:grid;grid-template-columns:auto auto;justify-content:end;gap:4px 18px;font-size:14px}
+.tot b{font-size:16px}
+.taller{color:var(--mut);font-size:13px;text-align:center;line-height:1.6;margin-top:24px}
+.carga{text-align:center;padding:60px 16px;color:var(--mut)}
+.spin{width:30px;height:30px;border-radius:50%;border:4px solid #e6e6e3;border-top-color:var(--or);margin:0 auto 10px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* celular: el historial pasa a tarjetas */
+@media (max-width:700px){
+ .kpis{grid-template-columns:repeat(2,1fr)}
+ .hd .who span{display:none}
+ table.hist>thead{display:none}
+ table.hist,table.hist>tbody,table.hist>tbody>tr,table.hist>tbody>tr>td{display:block;width:100%}
+ table.hist>tbody>tr.click{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;padding:6px 4px;background:#fff}
+ table.hist>tbody>tr.click>td{border:0;padding:3px 10px;text-align:left}
+ table.hist>tbody>tr.click>td[data-l]::before{content:attr(data-l) ": ";color:var(--mut);font-size:12px}
+ table.hist>tbody>tr.det{margin:-6px 0 10px}
+ table.hist>tbody>tr.det>td{border-radius:0 0 10px 10px}
+}
+@media print{header,.emps,.noprint{display:none!important}body{background:#fff}.card{border:0;padding:0}}
+</style>
+</head>
+<body>
+
+<div id="login">
+ <form class="login-box" id="loginForm" autocomplete="on">
+  <img src="logo.png" alt="Taller Pepe">
+  <h2>Consultá tus vehículos y servicios</h2>
+  <label class="f">Usuario<input id="lUser" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+  <label class="f">Contraseña<input id="lPass" type="password" autocomplete="current-password"></label>
+  <button class="btn pri" type="submit" id="lBtn">Ingresar</button>
+  <div class="err" id="lErr"></div>
+ </form>
+</div>
+
+<div id="app" hidden>
+ <header><div class="hd"><img src="logo.png" alt="Taller Pepe"><div class="sp"></div><div class="who" id="who"></div><button class="out" id="out">Salir</button></div></header>
+ <main id="main"><div class="carga"><div class="spin"></div>Cargando tus datos…</div></main>
+</div>
+
+<script src="supabase.js"></script>
+<script>
+(function(){
+'use strict';
+const CFG={
+ SUPABASE_URL:"https://yzdgzaeybuzxcalvnppp.supabase.co",
+ SUPABASE_ANON_KEY:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6ZGd6YWV5YnV6eGNhbHZucHBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0ODA3NDUsImV4cCI6MjEwODA1Njc0NX0.hZCJ__tKVZpFeZJG8bmmhjNINp3eOyX-kpqNWsU7BH0",
+ DOMINIO:"tallerpepe.local"
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const n=v=>{const x=parseFloat(String(v??'').replace(',','.'));return isFinite(x)?x:0;};
+const fnum=v=>Math.round(n(v)).toLocaleString('es-UY');
+const fdate=iso=>{if(!iso)return '';const p=String(iso).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:iso;};
+let CONF={moneda:'$'},yo=null,clientes=[],vehiculos=[],servicios=[],empSel=null,vehSel='',abierto=null;
+const money=v=>(CONF.moneda||'$')+' '+Number(v||0).toLocaleString('es-UY',{minimumFractionDigits:2,maximumFractionDigits:2});
+const sb=window.supabase.createClient(CFG.SUPABASE_URL,CFG.SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+
+function err(m){$('#lErr').textContent=m;}
+function msgErr(e){const m=String(e&&(e.message||e)||e);
+ if(/Invalid login credentials/i.test(m))return 'Usuario o contraseña incorrectos';
+ if(/Failed to fetch|NetworkError/i.test(m))return 'Sin conexión. Revisá tu internet.';
+ return m;}
+
+$('#loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const u=$('#lUser').value.trim().toLowerCase(),pw=$('#lPass').value;
+ if(!u||!pw)return err('Escribí usuario y contraseña');
+ $('#lBtn').disabled=true;err('');
+ try{
+  const {error}=await sb.auth.signInWithPassword({email:u+'@'+CFG.DOMINIO,password:pw});
+  if(error)throw error;
+  await entrar();
+ }catch(x){err(msgErr(x));$('#lPass').value='';}
+ finally{$('#lBtn').disabled=false;}
+});
+$('#out').addEventListener('click',async()=>{try{await sb.auth.signOut();}catch(e){}location.reload();});
+
+async function entrar(){
+ const {data,error}=await sb.rpc('tph_portal_ingreso');
+ if(error)throw error;
+ if(!data){await sb.auth.signOut();throw new Error('Tu usuario no tiene acceso a esta página. Consultá en el taller.');}
+ yo=data;
+ $('#login').hidden=true;$('#app').hidden=false;
+ $('#who').innerHTML=`<b>${esc(yo.nombre)}</b><br><span>${esc(yo.usuario)}</span>`;
+ await cargar();
+}
+async function cargar(){
+ try{
+  const filas=[];
+  for(let i=0;;i+=1000){
+   const {data,error}=await sb.from('tph_registros').select('tabla,id,datos').range(i,i+999);
+   if(error)throw error;filas.push(...data);if(data.length<1000)break;
+  }
+  const de=t=>filas.filter(r=>r.tabla===t&&r.datos).map(r=>Object.assign({},r.datos,{id:r.id}));
+  const cf=filas.find(r=>r.tabla==='config');if(cf&&cf.datos)CONF=cf.datos;
+  clientes=de('clientes').sort((a,b)=>String(a.nombre).localeCompare(String(b.nombre),'es'));
+  vehiculos=de('vehiculos');servicios=de('servicios');
+  if(!empSel||!clientes.some(c=>c.id===empSel))empSel=clientes[0]?.id||null;
+  pintar();
+ }catch(e){$('#main').innerHTML=`<div class="carga">No se pudieron cargar los datos.<br><b>${esc(msgErr(e))}</b><br><br><button class="btn pri" onclick="location.reload()">Volver a intentar</button></div>`;}
+}
+const bySvc=(a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(n(b.km)-n(a.km));
+const servVeh=id=>servicios.filter(s=>s.vehiculoId===id).sort(bySvc);
+const lastKm=v=>Math.max(n(v.kmInicial),...servVeh(v.id).map(s=>n(s.km)),0);
+const lastProx=v=>servVeh(v.id).find(s=>n(s.proximoKm)>0)?.proximoKm||null;
+
+function pintar(){
+ const m=$('#main');
+ if(!clientes.length){m.innerHTML='<div class="carga">Todavía no hay datos cargados para tu usuario.<br>Consultá en el taller.</div>'+pie();return;}
+ const c=clientes.find(x=>x.id===empSel);
+ const vs=vehiculos.filter(v=>v.clienteId===c.id).sort((a,b)=>String(a.matricula).localeCompare(String(b.matricula)));
+ let ss=servicios.filter(s=>s.clienteId===c.id).sort(bySvc);
+ const tot=ss.reduce((a,s)=>a+n(s.tot&&s.tot.total),0),pend=ss.filter(s=>s.estadoPago==='Pendiente').reduce((a,s)=>a+n(s.tot&&s.tot.total),0);
+ if(vehSel&&!vs.some(v=>v.id===vehSel))vehSel='';
+ const lista=vehSel?ss.filter(s=>s.vehiculoId===vehSel):ss;
+ m.innerHTML=`
+ ${clientes.length>1?`<div class="emps">${clientes.map(x=>`<button class="emp ${x.id===empSel?'on':''}" data-emp="${esc(x.id)}">${esc(x.nombre)}</button>`).join('')}</div>`:''}
+ <h1>${esc(c.nombre)}</h1>
+ <div class="sub">${[c.documento?'RUT / CI '+c.documento:'',c.telefono,c.email].filter(Boolean).map(esc).join(' · ')||'&nbsp;'}</div>
+ <div class="kpis">
+  <div class="kpi"><div class="l">Vehículos</div><div class="v">${vs.length}</div></div>
+  <div class="kpi"><div class="l">Servicios</div><div class="v">${ss.length}</div></div>
+  <div class="kpi"><div class="l">Total</div><div class="v sm">${money(tot)}</div></div>
+  <div class="kpi"><div class="l">Pendiente de pago</div><div class="v sm" style="color:${pend?'var(--warn)':'inherit'}">${money(pend)}</div></div>
+ </div>
+ <div class="card"><h3>Vehículos</h3>
+ ${vs.length?`<div class="vcards">${vs.map(v=>{const k=lastKm(v),px=lastProx(v),ls=servVeh(v.id)[0],cerca=px&&k&&px-k<=1000;return `<div class="vcard">
+  <div class="h"><span class="mat">${esc(v.matricula)}</span><span class="muted">${esc(v.anio||'')}</span></div>
+  ${[v.marca,v.modelo].filter(Boolean).length?`<b>${esc([v.marca,v.modelo].filter(Boolean).join(' '))}</b><br>`:''}
+  Último km: <b>${k?fnum(k):'—'}</b><br>
+  Próximo service: <b class="${cerca?'alerta':''}">${px?fnum(px)+' km':'—'}</b>${cerca?' <span class="alerta">· ¡ya toca!</span>':''}<br>
+  Última visita: <b>${ls?fdate(ls.fecha):'—'}</b>
+  <div style="margin-top:8px"><button class="btn sm" data-veh="${esc(v.id)}">Ver servicios</button></div></div>`;}).join('')}</div>`:'<div class="empty">No hay vehículos.</div>'}
+ </div>
+ <div class="card"><h3>Historial de servicios<span class="sp"></span>
+  <select class="filt" id="fVeh"><option value="">Todos los vehículos</option>${vs.map(v=>`<option value="${esc(v.id)}" ${v.id===vehSel?'selected':''}>${esc(v.matricula)}</option>`).join('')}</select></h3>
+ ${lista.length?`<div class="tw"><table class="hist"><thead><tr><th>Fecha</th><th>Vehículo</th><th>Servicio</th><th class="r">Km</th><th>Presupuesto</th><th class="r">Total</th><th>Pago</th></tr></thead><tbody>
+ ${lista.map(s=>{const v=vehiculos.find(x=>x.id===s.vehiculoId);return `<tr class="click" data-s="${esc(s.id)}">
+  <td data-l="Fecha"><b>${fdate(s.fecha)}</b></td><td data-l="Vehículo"><span class="mat">${esc(v?.matricula||'—')}</span></td>
+  <td data-l="Servicio">${esc(s.tipo||'—')}${s.trabajo?`<div class="muted" style="font-size:13px">${esc(s.trabajo.length>70?s.trabajo.slice(0,70)+'…':s.trabajo)}</div>`:''}</td>
+  <td class="r" data-l="Km">${n(s.km)>0?fnum(s.km):'—'}</td><td data-l="Presupuesto">${s.factura?esc(s.factura.numero):'—'}</td>
+  <td class="r" data-l="Total"><b>${money(s.tot&&s.tot.total)}</b></td>
+  <td data-l="Pago"><span class="tag ${s.estadoPago==='Pendiente'?'pend':'ok'}">${s.estadoPago==='Pendiente'?'Pendiente':'Pagado'}</span></td></tr>
+  ${abierto===s.id?detalle(s,v):''}`;}).join('')}
+ </tbody></table></div>`:'<div class="empty">Todavía no hay servicios.</div>'}
+ </div>${pie()}`;
+}
+function detalle(s,v){
+ const t=s.tot||{},it=s.items||[];
+ return `<tr class="det"><td colspan="7">
+  ${s.trabajo?`<div style="margin-bottom:6px"><b>Trabajo realizado:</b> ${esc(s.trabajo)}</div>`:''}
+  ${(()=>{const p=[v?[v.marca,v.modelo,v.anio].filter(Boolean).join(' '):'',n(s.km)>0?fnum(s.km)+' km':'',n(s.proximoKm)>0?'Próximo service: '+fnum(s.proximoKm)+' km':''].filter(Boolean);return p.length?`<div class="muted" style="font-size:13px">${esc(p.join(' · '))}</div>`:'';})()}
+  ${it.length?`<table><tr><th>Detalle</th><th class="r">Cant.</th><th class="r">Precio</th><th class="r">Importe</th></tr>${it.map(i=>`<tr><td>${esc(i.desc||i.tipo)}${i.tipo&&i.desc&&i.tipo!==i.desc?` <span class="muted" style="font-size:12px">(${esc(i.tipo)})</span>`:''}</td><td class="r">${esc(i.cant)}</td><td class="r">${money(i.precio)}</td><td class="r">${money(n(i.cant)*n(i.precio))}</td></tr>`).join('')}</table>`:''}
+  <div class="tot"><span>Subtotal</span><span class="r">${money(t.neto)}</span><span>IVA ${esc(s.ivaRate??'')}%</span><span class="r">${money(t.iva)}</span><b>TOTAL</b><b class="r">${money(t.total)}</b></div>
+  ${s.obs?`<div style="margin-top:8px" class="muted">${esc(s.obs)}</div>`:''}
+  <div class="noprint" style="margin-top:10px"><button class="btn sm" onclick="event.stopPropagation();window.print()">Imprimir</button></div>
+ </td></tr>`;
+}
+function pie(){
+ return `<div class="taller"><b>${esc(CONF.nombre||'Taller Pepe')}</b>${CONF.direccion?'<br>'+esc([CONF.direccion,CONF.ciudad].filter(Boolean).join(', ')):''}${CONF.telefono?`<br>Tel. <a href="tel:${esc(String(CONF.telefono).replace(/\s/g,''))}">${esc(CONF.telefono)}</a>`:''}<br><span style="font-size:12px">Los presupuestos son comprobantes internos del taller.</span></div>`;
+}
+$('#main').addEventListener('click',e=>{
+ const em=e.target.closest('[data-emp]');if(em){empSel=em.dataset.emp;vehSel='';abierto=null;pintar();window.scrollTo(0,0);return;}
+ const vb=e.target.closest('[data-veh]');if(vb){vehSel=vb.dataset.veh;abierto=null;pintar();$('#fVeh')?.closest('.card').scrollIntoView({behavior:'smooth'});return;}
+ const tr=e.target.closest('tr[data-s]');if(tr){abierto=abierto===tr.dataset.s?null:tr.dataset.s;pintar();return;}
+});
+$('#main').addEventListener('change',e=>{if(e.target.id==='fVeh'){vehSel=e.target.value;abierto=null;pintar();}});
+(async()=>{
+ try{const {data}=await sb.auth.getSession();if(data&&data.session)await entrar();}
+ catch(e){err(msgErr(e));}
+})();
+})();
+</script>
+</body>
+</html>

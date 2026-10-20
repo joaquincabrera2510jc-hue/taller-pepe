@@ -9,4 +9,6 @@ window.CONFIG = {
   SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl6ZGd6YWV5YnV6eGNhbHZucHBwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0ODA3NDUsImV4cCI6MjEwODA1Njc0NX0.hZCJ__tKVZpFeZJG8bmmhjNINp3eOyX-kpqNWsU7BH0",
   // Dominio interno de los usuarios (no se mandan correos): el usuario "pepe" es pepe@tallerpepe.local
   DOMINIO_USUARIOS: "tallerpepe.local",
+  // Dirección del portal web de clientes
+  PORTAL_URL: "https://joaquincabrera2510jc-hue.github.io/taller-pepe/",
 };

@@ -365,6 +365,7 @@ function render(){
  const m=$('#main');
  const fn={inicio:vInicio,clientes:vClientes,cliente:vCliente,vehiculos:vVehiculos,vehiculo:vVehiculo,servicios:vServicios,servicio:vServicio,estadisticas:vEstadisticas,config:vConfig}[view.name]||vInicio;
  m.innerHTML=fn();
+ if(view.name==='cliente'){pintarPortal();cargarPortal();}
  if(view.name==='servicio')updTotals();
 }
 function barsHTML(series){const max=Math.max(...series.map(s=>s.v),1);return `<div class="bars">${series.map(s=>`<div class="bar" title="${esc(s.label)}: ${esc(money(s.v))}"><div class="bv">${s.v?shortMoney(s.v):''}</div><div class="bf ${s.v?'':'z'}" style="height:${Math.max(2,Math.round(s.v/max*130))}px"></div><div class="bl">${esc(s.label)}</div></div>`).join('')}</div>`;}
@@ -467,6 +468,7 @@ function vCliente(){
   <div class="b"><button class="btn sm" onclick="App.go('vehiculo','${v.id}')">Ver</button><button class="btn sm" onclick="App.pdfVehiculo('${v.id}')">PDF</button><button class="btn sm pri" onclick="App.nuevoServicio('${c.id}','${v.id}')">+ Servicio</button></div></div>`;}).join('')}</div>`:'<div class="empty">Este cliente no tiene vehículos. <a href="#" onclick="event.preventDefault();App.formVehiculo(null,\''+c.id+'\')">Agregar uno</a></div>'}
  </div>
  <div class="card"><h3>Historial de servicios</h3>${tablaServicios(ss,{cliente:false})}</div>
+ ${portalCard(c)}
  <div class="actions"><button class="btn danger" onclick="App.borrarCliente('${c.id}')">Eliminar cliente</button></div>`;
 }
 
@@ -584,6 +586,71 @@ async function emitirFactura(id){
  const s=S.servicios.find(x=>x.id===id);if(s.factura)return pdfFactura(id);
  let num;try{num=await nextNum();}catch(e){return;}
  s.factura={numero:num,emitida:today()};save();render();await pdfFactura(id);
+}
+
+/* ---------- Acceso web de clientes (portal) ---------- */
+const PORTAL_URL=CFG.PORTAL_URL||'';
+let portalLista=null,portalCargando=false;
+const slugUsr=t=>noAcc(String(t||'').toLowerCase()).replace(/[^a-z0-9]+/g,'.').replace(/^\.+|\.+$/g,'').slice(0,30);
+async function cargarPortal(){
+ if(!Nube.activo||portalCargando)return;portalCargando=true;
+ try{const {data,error}=await Nube.sb.rpc('tph_portal_lista');if(error)throw error;portalLista=data||[];}
+ catch(e){console.error(e);if(portalLista===null)portalLista=[];}
+ finally{portalCargando=false;}
+ pintarPortal();
+}
+function pintarPortal(){
+ const b=document.getElementById('portalBox');if(!b)return;const cid=b.dataset.c;
+ if(portalLista===null){b.innerHTML='<div class="muted">Cargando…</div>';return;}
+ const us=portalLista.filter(u=>(u.clientes||[]).includes(cid));
+ b.innerHTML=us.length?`<div class="tw"><table><tr><th>Usuario</th><th>Nombre</th><th>También ve</th><th>Último ingreso</th><th></th></tr>${us.map(u=>{const otros=(u.clientes||[]).filter(x=>x!==cid).map(x=>cli(x)?.nombre||'(cliente borrado)');return `<tr><td><b>${esc(u.usuario)}</b>${u.activo?'':' <span class="tag pend">Desactivado</span>'}</td><td>${esc(u.nombre)}</td><td>${otros.length?esc(otros.join(', ')):'<span class="muted">—</span>'}</td><td>${u.ultimo_ingreso?new Date(u.ultimo_ingreso).toLocaleString('es-UY',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'<span class="muted">Nunca</span>'}</td><td class="r" style="white-space:nowrap"><button class="btn sm" onclick="App.portalClave('${esc(u.usuario)}')">Cambiar contraseña</button> <button class="btn sm" onclick="App.portalQuitar('${esc(u.usuario)}','${cid}')">Quitar acceso</button></td></tr>`;}).join('')}</table></div>`
+  :'<div class="empty" style="padding:14px">Este cliente todavía no tiene usuario para ver sus datos por internet.</div>';
+}
+function portalCard(c){
+ return `<div class="card"><h3>Acceso web del cliente<span class="sp"></span><button class="btn sm" onclick="App.portalDar('${c.id}')">+ Dar acceso a un usuario existente</button> <button class="btn sm pri" onclick="App.portalNuevo('${c.id}')">+ Crear usuario web</button></h3>
+ <div id="portalBox" data-c="${c.id}"></div>
+ <p class="muted" style="margin:10px 0 0;line-height:1.5">El cliente entra desde el celular o la PC${PORTAL_URL?` en <a href="${esc(PORTAL_URL)}" target="_blank">${esc(PORTAL_URL.replace(/^https?:\/\//,''))}</a>`:''} y ve sus vehículos, servicios y presupuestos, sin poder cambiar nada. Un mismo usuario puede ver varias empresas.</p></div>`;
+}
+function portalNuevo(cid){
+ const c=cli(cid);
+ modal('Crear usuario web',`<div class="form">
+  <label class="f">Usuario *<input id="p_usr" value="${esc(slugUsr(c.nombre))}" autocomplete="off"></label>
+  <label class="f">Nombre *<input id="p_nom" value="${esc(c.nombre)}"></label>
+  <label class="f full">Contraseña * (mínimo 6)<input id="p_pw" autocomplete="off"></label>
+ </div><div class="hint">Va a poder ver los datos de <b>${esc(c.nombre)}</b>. Después le podés dar acceso a otras empresas.</div>`,
+ [{label:'Cancelar'},{label:'Crear usuario',cls:'pri',onClick:async()=>{
+  const usr=val('p_usr').toLowerCase(),nom=val('p_nom'),pw=document.getElementById('p_pw').value;
+  const {error}=await Nube.sb.rpc('tph_portal_crear',{p_usuario:usr,p_nombre:nom,p_password:pw,p_cliente:cid});
+  if(error){toast(esc(errNube(error)),'err',7000);return false;}
+  await cargarPortal();
+  modal('Usuario web creado',`<p style="line-height:1.6;margin:0">Pasale estos datos a <b>${esc(nom)}</b>:</p><div class="card" style="margin:10px 0 0;user-select:text">${PORTAL_URL?`Dirección: <b>${esc(PORTAL_URL)}</b><br>`:''}Usuario: <b>${esc(usr)}</b><br>Contraseña: <b>${esc(pw)}</b></div>`,[{label:'Listo',cls:'pri'}]);
+  return false;
+ }}]);
+}
+async function portalDar(cid){
+ if(portalLista===null)await cargarPortal();
+ const op=(portalLista||[]).filter(u=>!(u.clientes||[]).includes(cid));
+ if(!op.length)return toast('No hay otros usuarios web. Creá uno con “+ Crear usuario web”.','err',6000);
+ modal('Dar acceso a un usuario existente',`<label class="f">Usuario web<select id="p_sel">${op.map(u=>`<option value="${esc(u.usuario)}">${esc(u.usuario)} — ${esc(u.nombre)}</option>`).join('')}</select></label><div class="hint">Además de lo que ya ve, va a poder ver los datos de <b>${esc(cli(cid).nombre)}</b>.</div>`,
+ [{label:'Cancelar'},{label:'Dar acceso',cls:'pri',onClick:async()=>{
+  const {error}=await Nube.sb.rpc('tph_portal_vincular',{p_usuario:val('p_sel'),p_cliente:cid,p_dar:true});
+  if(error){toast(esc(errNube(error)),'err',7000);return false;}
+  await cargarPortal();toast('Acceso dado','ok');
+ }}]);
+}
+async function portalQuitar(usr,cid){
+ if(!await confirmBox(`¿Quitarle a <b>${esc(usr)}</b> el acceso a <b>${esc(cli(cid)?.nombre)}</b>? Si ve otras empresas, las sigue viendo.`,'Quitar acceso'))return;
+ const {error}=await Nube.sb.rpc('tph_portal_vincular',{p_usuario:usr,p_cliente:cid,p_dar:false});
+ if(error)return toast(esc(errNube(error)),'err',7000);
+ await cargarPortal();toast('Acceso quitado','ok');
+}
+function portalClave(usr){
+ modal('Cambiar contraseña de '+usr,`<label class="f">Contraseña nueva (mínimo 6)<input id="p_pw2" autocomplete="off"></label>`,
+ [{label:'Cancelar'},{label:'Guardar',cls:'pri',onClick:async()=>{
+  const {error}=await Nube.sb.rpc('tph_portal_editar',{p_usuario:usr,p_nombre:'',p_password:document.getElementById('p_pw2').value,p_activo:null});
+  if(error){toast(esc(errNube(error)),'err',7000);return false;}
+  toast('Contraseña cambiada','ok');
+ }}]);
 }
 
 /* ---------- Formulario de servicio ---------- */
@@ -968,7 +1035,7 @@ if(window.tallerNative&&window.tallerNative.onUpdate){
 }
 
 /* ---------- API global ---------- */
-window.App={go,pickFolder,reconnect,formCliente,borrarCliente,formVehiculo,borrarVehiculo,nuevoServicio,editarServicio,guardarServicio,borrarServicio,togglePago,emitirFactura,pdfFactura,pdfCliente,pdfVehiculo,guardarConfig,exportar,importar,
+window.App={go,portalNuevo,portalDar,portalQuitar,portalClave,pickFolder,reconnect,formCliente,borrarCliente,formVehiculo,borrarVehiculo,nuevoServicio,editarServicio,guardarServicio,borrarServicio,togglePago,emitirFactura,pdfFactura,pdfCliente,pdfVehiculo,guardarConfig,exportar,importar,
  abrirGuardado:k=>NATIVE.open(saved[k]),verEnCarpeta:k=>NATIVE.show(saved[k]),abrirCarpeta:parts=>NATIVE.open(parts),
  carpetaCli:async id=>{const c=cli(id);await ensureClientFolders(c);const used=[];await getDir([clientFolder(c)],used);NATIVE.open(used);},
  carpetaVeh:async id=>{const v=veh(id),c=cli(v.clienteId);await ensureClientFolders(c);const used=[];await getDir([clientFolder(c),safeName(v.matricula)],used);NATIVE.open(used);},
