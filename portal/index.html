@@ -84,6 +84,14 @@ tr.click:hover td{background:#fbf7f2}
 .pend{border-left:4px solid var(--warn)}
 .pend-tot{color:var(--warn);font-size:18px}
 .pend-ok h3{color:var(--ok);font-size:14px}
+.gyear{display:inline-flex;align-items:center;gap:6px;font-size:14px}
+.gya{border:1px solid var(--line);background:#fff;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1}
+.gya:disabled{opacity:.35;cursor:default}
+.gmeses{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;scrollbar-width:thin}
+.gmes{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:16px;padding:5px 11px;font-size:13px;font-weight:600;cursor:pointer}
+.gmes.on{background:var(--or);border-color:var(--or);color:#fff}
+.gmes.anual{margin-left:6px;border-color:#bbb}
+.gmes.anual.on{background:var(--dark);border-color:var(--dark)}
 .gbars{display:flex;flex-direction:column;gap:10px}
 .gbar{display:grid;grid-template-columns:minmax(120px,220px) 1fr auto;gap:12px;align-items:center;cursor:pointer}
 .gbar:hover .gf{filter:brightness(1.08)}
@@ -219,15 +227,28 @@ function pendientes(){
  </tbody></table></div></div>`;
 }
 const dias=iso=>iso?Math.floor((Date.now()-new Date(iso+'T12:00:00').getTime())/864e5):0;
+const MESES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const hoyY=new Date().getFullYear(),hoyM=new Date().getMonth()+1;
+let gAnio=hoyY,gMes=hoyM; // gMes=0 → anual
 function grafica(vs,ss){
- const filas=vs.map(v=>({v,t:ss.filter(x=>x.vehiculoId===v.id).reduce((a,x)=>a+n(x.tot&&x.tot.total),0)})).filter(r=>r.t>0).sort((a,b)=>b.t-a.t);
- if(!filas.length)return '';
- const max=filas[0].t;
- return `<div class="card"><h3>Gasto por vehículo</h3><div class="sub" style="margin:-6px 0 12px">De mayor a menor</div>
- <div class="gbars">${filas.map((r,i)=>`<div class="gbar" data-veh="${esc(r.v.id)}" title="Ver servicios de ${esc(r.v.matricula)}">
+ const anios=[...new Set(ss.map(x=>+String(x.fecha||'').slice(0,4)).filter(Boolean).concat(hoyY))].sort((a,b)=>a-b);
+ if(!anios.includes(gAnio))gAnio=hoyY;
+ const ultMes=gAnio===hoyY?hoyM:12;
+ if(gMes>ultMes)gMes=ultMes;
+ const pref=gMes?gAnio+'-'+String(gMes).padStart(2,'0'):String(gAnio);
+ const enPer=ss.filter(x=>String(x.fecha||'').startsWith(pref));
+ const filas=vs.map(v=>({v,t:enPer.filter(x=>x.vehiculoId===v.id).reduce((a,x)=>a+n(x.tot&&x.tot.total),0)})).filter(r=>r.t>0).sort((a,b)=>b.t-a.t);
+ const max=filas.length?filas[0].t:1,tot=filas.reduce((a,r)=>a+r.t,0);
+ const i=anios.indexOf(gAnio);
+ return `<div class="card"><h3>Gasto por vehículo<span class="sp"></span>
+  <span class="gyear"><button class="gya" data-ga="${anios[i-1]||''}" ${i>0?'':'disabled'} aria-label="Año anterior">‹</button><b>${gAnio}</b><button class="gya" data-ga="${anios[i+1]||''}" ${i<anios.length-1?'':'disabled'} aria-label="Año siguiente">›</button></span></h3>
+ <div class="gmeses">${Array.from({length:ultMes},(_,k)=>k+1).map(m=>`<button class="gmes ${gMes===m?'on':''}" data-gm="${m}">${MESES[m-1]}</button>`).join('')}<button class="gmes anual ${gMes===0?'on':''}" data-gm="0">Anual</button></div>
+ <div class="sub" style="margin:2px 0 12px">${gMes?MESES[gMes-1]+' '+gAnio:'Todo '+gAnio} · ${filas.length?'Total: <b style="color:var(--txt)">'+money(tot)+'</b> · de mayor a menor':'sin gastos en este período'}</div>
+ ${filas.length?`<div class="gbars">${filas.map((r,k)=>`<div class="gbar" data-veh="${esc(r.v.id)}" title="Ver servicios de ${esc(r.v.matricula)}">
   <div class="gl"><span class="mat">${esc(r.v.matricula)}</span><span class="gm">${esc([r.v.marca,r.v.modelo].filter(Boolean).join(' '))}</span></div>
-  <div class="gt"><div class="gf${i===0?' top':''}" style="width:${Math.max(2,Math.round(r.t/max*100))}%"></div></div>
-  <div class="gv">${money(r.t)}</div></div>`).join('')}</div></div>`;
+  <div class="gt"><div class="gf${k===0?' top':''}" style="width:${Math.max(2,Math.round(r.t/max*100))}%"></div></div>
+  <div class="gv">${money(r.t)}</div></div>`).join('')}</div>`:'<div class="empty" style="padding:14px">No hubo servicios en este período.</div>'}
+ </div>`;
 }
 function pintar(){
  const m=$('#main');
@@ -270,6 +291,7 @@ function pintar(){
   ${abierto===s.id?detalle(s,v):''}`;}).join('')}
  </tbody></table></div>`:'<div class="empty">Todavía no hay servicios.</div>'}
  </div>${pie()}`;
+ const gon=m.querySelector('.gmes.on');if(gon){const gr=gon.parentElement;gr.scrollLeft=Math.max(0,gon.offsetLeft-gr.offsetLeft-gr.clientWidth/2+gon.offsetWidth/2);}
 }
 function detalle(s,v,cols=7){
  const t=s.tot||{},it=s.items||[];
@@ -288,6 +310,8 @@ function pie(){
 $('#main').addEventListener('click',e=>{
  const em=e.target.closest('[data-emp]');if(em){empSel=em.dataset.emp;vehSel='';abierto=null;pintar();window.scrollTo(0,0);return;}
  const vb=e.target.closest('[data-veh]');if(vb){vehSel=vb.dataset.veh;abierto=null;pintar();$('#fVeh')?.closest('.card').scrollIntoView({behavior:'smooth'});return;}
+ const gm=e.target.closest('[data-gm]');if(gm){gMes=+gm.dataset.gm;pintar();return;}
+ const ga=e.target.closest('[data-ga]');if(ga&&ga.dataset.ga){gAnio=+ga.dataset.ga;gMes=gAnio===hoyY?hoyM:12;pintar();return;}
  const tp=e.target.closest('tr[data-sp]');if(tp){abiertoP=abiertoP===tp.dataset.sp?null:tp.dataset.sp;pintar();return;}
  const tr=e.target.closest('tr[data-s]');if(tr){abierto=abierto===tr.dataset.s?null:tr.dataset.s;pintar();return;}
 });
