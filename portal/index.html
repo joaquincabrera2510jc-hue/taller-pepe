@@ -238,12 +238,12 @@ function grafica(vs,ss){
  const pref=gMes?gAnio+'-'+String(gMes).padStart(2,'0'):String(gAnio);
  const enPer=ss.filter(x=>String(x.fecha||'').startsWith(pref));
  const filas=vs.map(v=>({v,t:enPer.filter(x=>x.vehiculoId===v.id).reduce((a,x)=>a+n(x.tot&&x.tot.total),0)})).filter(r=>r.t>0).sort((a,b)=>b.t-a.t);
- const max=filas.length?filas[0].t:1,tot=filas.reduce((a,r)=>a+r.t,0);
+ const max=filas.length?filas[0].t:1;
  const i=anios.indexOf(gAnio);
  return `<div class="card"><h3>Gasto por vehículo<span class="sp"></span>
   <span class="gyear"><button class="gya" data-ga="${anios[i-1]||''}" ${i>0?'':'disabled'} aria-label="Año anterior">‹</button><b>${gAnio}</b><button class="gya" data-ga="${anios[i+1]||''}" ${i<anios.length-1?'':'disabled'} aria-label="Año siguiente">›</button></span></h3>
  <div class="gmeses">${Array.from({length:ultMes},(_,k)=>k+1).map(m=>`<button class="gmes ${gMes===m?'on':''}" data-gm="${m}">${MESES[m-1]}</button>`).join('')}<button class="gmes anual ${gMes===0?'on':''}" data-gm="0">Anual</button></div>
- <div class="sub" style="margin:2px 0 12px">${gMes?MESES[gMes-1]+' '+gAnio:'Todo '+gAnio} · ${filas.length?'Total: <b style="color:var(--txt)">'+money(tot)+'</b> · de mayor a menor':'sin gastos en este período'}</div>
+ <div class="sub" style="margin:2px 0 12px">${gMes?MESES[gMes-1]+' '+gAnio:'Todo '+gAnio} · ${filas.length?'de mayor a menor':'sin gastos en este período'}</div>
  ${filas.length?`<div class="gbars">${filas.map((r,k)=>`<div class="gbar" data-veh="${esc(r.v.id)}" title="Ver servicios de ${esc(r.v.matricula)}">
   <div class="gl"><span class="mat">${esc(r.v.matricula)}</span><span class="gm">${esc([r.v.marca,r.v.modelo].filter(Boolean).join(' '))}</span></div>
   <div class="gt"><div class="gf${k===0?' top':''}" style="width:${Math.max(2,Math.round(r.t/max*100))}%"></div></div>
