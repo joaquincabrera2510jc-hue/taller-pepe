@@ -84,6 +84,17 @@ tr.click:hover td{background:#fbf7f2}
 .pend{border-left:4px solid var(--warn)}
 .pend-tot{color:var(--warn);font-size:18px}
 .pend-ok h3{color:var(--ok);font-size:14px}
+.gbars{display:flex;flex-direction:column;gap:10px}
+.gbar{display:grid;grid-template-columns:minmax(120px,220px) 1fr auto;gap:12px;align-items:center;cursor:pointer}
+.gbar:hover .gf{filter:brightness(1.08)}
+.gl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.gl .mat{align-self:flex-start}
+.gm{font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt{background:#f0efec;border-radius:6px;height:22px;overflow:hidden}
+.gf{height:100%;background:#ffb27a;border-radius:6px}
+.gf.top{background:var(--or)}
+.gv{font-weight:700;font-size:14px;white-space:nowrap;min-width:96px;text-align:right}
+@media (max-width:700px){.gbar{grid-template-columns:1fr auto;gap:4px 10px}.gl{grid-column:1;flex-direction:row;align-items:center;gap:8px}.gv{grid-column:2;grid-row:1}.gt{grid-column:1/-1;height:16px}}
 .taller{color:var(--mut);font-size:13px;text-align:center;line-height:1.6;margin-top:24px}
 .carga{text-align:center;padding:60px 16px;color:var(--mut)}
 .spin{width:30px;height:30px;border-radius:50%;border:4px solid #e6e6e3;border-top-color:var(--or);margin:0 auto 10px;animation:spin 1s linear infinite}
@@ -208,6 +219,16 @@ function pendientes(){
  </tbody></table></div></div>`;
 }
 const dias=iso=>iso?Math.floor((Date.now()-new Date(iso+'T12:00:00').getTime())/864e5):0;
+function grafica(vs,ss){
+ const filas=vs.map(v=>({v,t:ss.filter(x=>x.vehiculoId===v.id).reduce((a,x)=>a+n(x.tot&&x.tot.total),0)})).filter(r=>r.t>0).sort((a,b)=>b.t-a.t);
+ if(!filas.length)return '';
+ const max=filas[0].t;
+ return `<div class="card"><h3>Gasto por vehículo</h3><div class="sub" style="margin:-6px 0 12px">De mayor a menor</div>
+ <div class="gbars">${filas.map((r,i)=>`<div class="gbar" data-veh="${esc(r.v.id)}" title="Ver servicios de ${esc(r.v.matricula)}">
+  <div class="gl"><span class="mat">${esc(r.v.matricula)}</span><span class="gm">${esc([r.v.marca,r.v.modelo].filter(Boolean).join(' '))}</span></div>
+  <div class="gt"><div class="gf${i===0?' top':''}" style="width:${Math.max(2,Math.round(r.t/max*100))}%"></div></div>
+  <div class="gv">${money(r.t)}</div></div>`).join('')}</div></div>`;
+}
 function pintar(){
  const m=$('#main');
  if(!clientes.length){m.innerHTML='<div class="carga">Todavía no hay datos cargados para tu usuario.<br>Consultá en el taller.</div>'+pie();return;}
@@ -226,6 +247,7 @@ function pintar(){
   <div class="kpi"><div class="l">Vehículos</div><div class="v">${vs.length}</div></div>
   <div class="kpi"><div class="l">Pendiente de pago</div><div class="v sm" style="color:${pend?'var(--warn)':'inherit'}">${money(pend)}</div></div>
  </div>
+ ${grafica(vs,ss)}
  <div class="card"><h3>Vehículos</h3>
  ${vs.length?`<div class="vcards">${vs.map(v=>{const k=lastKm(v),px=lastProx(v),ls=servVeh(v.id)[0],cerca=px&&k&&px-k<=1000,sv=ss.filter(x=>x.vehiculoId===v.id),gv=sv.reduce((a,x)=>a+n(x.tot&&x.tot.total),0);return `<div class="vcard">
   <div class="h"><span class="mat">${esc(v.matricula)}</span><span class="muted">${esc(v.anio||'')}</span></div>
@@ -233,7 +255,7 @@ function pintar(){
   Último km: <b>${k?fnum(k):'—'}</b><br>
   Próximo service: <b class="${cerca?'alerta':''}">${px?fnum(px)+' km':'—'}</b>${cerca?' <span class="alerta">· ¡ya toca!</span>':''}<br>
   Última visita: <b>${ls?fdate(ls.fecha):'—'}</b><br>
-  Total en servicios: <b>${money(gv)}</b>
+  Total en servicios: <b>${money(gv)}</b> <span class="muted">(${sv.length} serv.)</span>
   <div style="margin-top:8px"><button class="btn sm" data-veh="${esc(v.id)}">Ver servicios</button></div></div>`;}).join('')}</div>`:'<div class="empty">No hay vehículos.</div>'}
  </div>
  <div class="card"><h3>Historial de servicios<span class="sp"></span>
