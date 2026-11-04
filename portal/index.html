@@ -53,7 +53,7 @@ h1{margin:0 0 4px;font-size:22px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
 .card h3{margin:0 0 12px;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .card h3 .sp{flex:1}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 .kpi{background:#fff;border:1px solid var(--line);border-left:4px solid var(--or);border-radius:10px;padding:12px 14px}
 .kpi .l{font-size:12px;color:var(--mut)}
 .kpi .v{font-size:20px;font-weight:700;margin-top:3px}
@@ -90,7 +90,9 @@ tr.click:hover td{background:#fbf7f2}
 @keyframes spin{to{transform:rotate(360deg)}}
 /* celular: el historial pasa a tarjetas */
 @media (max-width:700px){
- .kpis{grid-template-columns:repeat(2,1fr)}
+ .kpis{grid-template-columns:repeat(3,1fr)}
+ .kpi{padding:10px}
+ .kpi .v.sm{font-size:14px}
  .hd .who span{display:none}
  table.hist>thead{display:none}
  table.hist,table.hist>tbody,table.hist>tbody>tr,table.hist>tbody>tr>td{display:block;width:100%}
@@ -212,7 +214,7 @@ function pintar(){
  const c=clientes.find(x=>x.id===empSel);
  const vs=vehiculos.filter(v=>v.clienteId===c.id).sort((a,b)=>String(a.matricula).localeCompare(String(b.matricula)));
  let ss=servicios.filter(s=>s.clienteId===c.id).sort(bySvc);
- const tot=ss.reduce((a,s)=>a+n(s.tot&&s.tot.total),0),pend=ss.filter(s=>s.estadoPago==='Pendiente').reduce((a,s)=>a+n(s.tot&&s.tot.total),0);
+ const pend=ss.filter(s=>s.estadoPago==='Pendiente').reduce((a,s)=>a+n(s.tot&&s.tot.total),0);
  if(vehSel&&!vs.some(v=>v.id===vehSel))vehSel='';
  const lista=vehSel?ss.filter(s=>s.vehiculoId===vehSel):ss;
  m.innerHTML=`
@@ -223,16 +225,16 @@ function pintar(){
  <div class="kpis">
   <div class="kpi"><div class="l">Vehículos</div><div class="v">${vs.length}</div></div>
   <div class="kpi"><div class="l">Servicios</div><div class="v">${ss.length}</div></div>
-  <div class="kpi"><div class="l">Total</div><div class="v sm">${money(tot)}</div></div>
   <div class="kpi"><div class="l">Pendiente de pago</div><div class="v sm" style="color:${pend?'var(--warn)':'inherit'}">${money(pend)}</div></div>
  </div>
  <div class="card"><h3>Vehículos</h3>
- ${vs.length?`<div class="vcards">${vs.map(v=>{const k=lastKm(v),px=lastProx(v),ls=servVeh(v.id)[0],cerca=px&&k&&px-k<=1000;return `<div class="vcard">
+ ${vs.length?`<div class="vcards">${vs.map(v=>{const k=lastKm(v),px=lastProx(v),ls=servVeh(v.id)[0],cerca=px&&k&&px-k<=1000,sv=ss.filter(x=>x.vehiculoId===v.id),gv=sv.reduce((a,x)=>a+n(x.tot&&x.tot.total),0);return `<div class="vcard">
   <div class="h"><span class="mat">${esc(v.matricula)}</span><span class="muted">${esc(v.anio||'')}</span></div>
   ${[v.marca,v.modelo].filter(Boolean).length?`<b>${esc([v.marca,v.modelo].filter(Boolean).join(' '))}</b><br>`:''}
   Último km: <b>${k?fnum(k):'—'}</b><br>
   Próximo service: <b class="${cerca?'alerta':''}">${px?fnum(px)+' km':'—'}</b>${cerca?' <span class="alerta">· ¡ya toca!</span>':''}<br>
-  Última visita: <b>${ls?fdate(ls.fecha):'—'}</b>
+  Última visita: <b>${ls?fdate(ls.fecha):'—'}</b><br>
+  Total en servicios: <b>${money(gv)}</b> <span class="muted">(${sv.length} serv.)</span>
   <div style="margin-top:8px"><button class="btn sm" data-veh="${esc(v.id)}">Ver servicios</button></div></div>`;}).join('')}</div>`:'<div class="empty">No hay vehículos.</div>'}
  </div>
  <div class="card"><h3>Historial de servicios<span class="sp"></span>
